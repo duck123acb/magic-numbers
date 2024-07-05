@@ -44,6 +44,21 @@ fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -
 
   moves
 }
+
+fn set_occupancy(index: u64, attack_mask: u64) { // shift bits into the mask
+  let mut occupancy:u64 = 0;
+  let mut bit_index = 0;
+
+  for square in 0..64 {
+    if attack_mask & (1 << square) != 0 { // if the square is in the attack mask
+      if index & (1 << bit_index) != 0 { // if the current bit in the index is not zero
+        occupancy |= 1 << square;
+      }
+      bit_index += 1;
+    }
+  }
+}
+
 fn main() {
   println!("Hello World!");
 }
