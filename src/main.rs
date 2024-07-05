@@ -60,9 +60,22 @@ fn set_occupancy(index: u64, attack_mask: u64) -> u64 { // shift bits into the m
 
   occupancy
 }
+fn generate_occupancies(attack_mask: u64) -> Vec<u64> {
+  let mut occupancies = Vec::new();
+
+  // Iterate through all possible bit combinations within the attack mask
+  for index in 0..(1 << attack_mask.count_ones()) { // 0 to 2^number of bits on
+    let occupancy = set_occupancy(index, attack_mask);
+    occupancies.push(occupancy);
+  }
+
+  occupancies
+}
 
 fn main() {
   let mask = generate_sliding_piece_mask(&28, true, false); // d4 rook
-  let occupancy = set_occupancy(13, mask);
-  println!("{:b}", occupancy);
+  
+  for occupancy in generate_occupancies(mask) {
+    println!("{:b}", occupancy);
+  }
 }
