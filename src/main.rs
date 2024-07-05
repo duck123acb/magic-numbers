@@ -45,7 +45,7 @@ fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -
   moves
 }
 
-fn set_occupancy(index: u64, attack_mask: u64) { // shift bits into the mask
+fn set_occupancy(index: u64, attack_mask: u64) -> u64 { // shift bits into the mask
   let mut occupancy:u64 = 0;
   let mut bit_index = 0;
 
@@ -57,8 +57,12 @@ fn set_occupancy(index: u64, attack_mask: u64) { // shift bits into the mask
       bit_index += 1;
     }
   }
+
+  occupancy
 }
 
 fn main() {
-  println!("Hello World!");
+  let mask = generate_sliding_piece_mask(&28, true, false); // d4 rook
+  let occupancy = set_occupancy(13, mask);
+  println!("{:b}", occupancy);
 }
