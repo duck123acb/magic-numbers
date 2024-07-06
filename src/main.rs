@@ -122,8 +122,7 @@ fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: 
 
   loop {
     let magic_candidate = random::<u64>() & random::<u64>() & random::<u64>(); // AND 3 different random numbers to reduce the active bits. this is done to hopefully find a smaller candidate
-    let product = attack_mask.wrapping_mul(magic_candidate); // overflows :/
-    if count_bits(product & 0xFF00000000000000) < 6 { // if the number of bits set to 1 are greater than 6, the candidate is too large
+    if count_bits(attack_mask.wrapping_mul(magic_candidate) & 0xFF00000000000000) < 6 { // if the number of bits set to 1 are greater than 6, the candidate is too large
       continue;
     }
 
@@ -131,8 +130,7 @@ fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: 
     let mut fail = false;
 
     for occupancy in &occupancies {
-      let x = occupancy.wrapping_mul(magic_candidate);
-      let attack_index = (x >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
+      let attack_index = (occupancy.wrapping_mul(magic_candidate) >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
       let attacks_bitboard = find_legal_moves(&square, occupancy, orthagonal, diagonal);
 
       // check for collisions in the hashmap
