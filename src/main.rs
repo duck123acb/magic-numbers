@@ -170,26 +170,38 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 
 fn main() {
   let file_path = "resources/rook_magics.txt";
-  let content = "Hello, world!\nThis is written to a file.";
 
-  match write_to_file(file_path, content) {
+  let mut squares = "Squares: [".to_string();
+  let mut masks = "Masks: [".to_string();
+  let mut magics = "Magics: [".to_string();
+  let mut relevant_bits = "Relevant Bits: [".to_string();
+  let mut attacks = "Attacks: [".to_string();
+
+  for square in 0..63 {
+    let rook = (true, false);
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
+
+    squares + ", " + &square.to_string();
+    masks + ", " + &mask.to_string();
+    magics + ", " + &magic_number.to_string();
+    relevant_bits + ", " + &bits.to_string();
+    attacks + ", [";
+    for attack in piece_attacks {
+      attacks + ", " + &attack.to_string();
+    }
+    attacks + "]";
+  }
+
+  let mut squares = "]".to_string();
+  let mut masks = "]".to_string();
+  let mut magics = "]".to_string();
+  let mut relevant_bits = "]".to_string();
+  let mut attacks = "]".to_string();
+
+  let content = squares + "\n" + &masks + "\n" + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
+
+  match write_to_file(file_path, content.as_str()) {
     Ok(_) => println!("Successfully wrote to {}", file_path),
     Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
   }
-  // let mut squares = Vec::new();
-  // let mut masks = Vec::new();
-  // let mut magics = Vec::new();
-  // let mut relevant_bits = Vec::new();
-  // let mut attacks = Vec::new();
-
-  // for square in 0..63 {
-  //   let rook = (true, false);
-  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
-
-  //   squares.push(square);
-  //   masks.push(mask);
-  //   magics.push(magic_number);
-  //   relevant_bits.push(bits);
-  //   attacks.push(piece_attacks);
-  // }
 }
