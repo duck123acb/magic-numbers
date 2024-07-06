@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::env;
-
 
 use rand::random;
 use rand::Rng;
@@ -115,14 +113,16 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: bool) -> u64 {
+fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> u64 {
+  let attack_mask = generate_sliding_piece_mask(&square, orthagonal, diagonal);
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(attack_mask);
   let mut rng = thread_rng(); // init the rng
 
   loop {
     let magic_candidate = random::<u64>() & random::<u64>() & random::<u64>(); // AND 3 different random numbers to reduce the active bits. this is done to hopefully find a smaller candidate
-    println!("{}",  magic_candidate);
+    println!("{}",  magic_candidate); // just to see that the program is actually running
+
     if count_bits(attack_mask.wrapping_mul(magic_candidate) & 0xFF00000000000000) < 6 { // if the number of bits set to 1 are greater than 6, the candidate is too large
       continue;
     }
@@ -152,10 +152,8 @@ fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: 
 }
 
 fn main() {
-  env::set_var("RUST_BACKTRACE", "1");
   let square = 28;
   let rook = (true, false);
-  let mask = generate_sliding_piece_mask(&square, rook.0, rook.1); // d4 rook
-  let magic_number = find_magic_number(square, mask, rook.0, rook.1);
+  let magic_number = find_magic_number(square, rook.0, rook.1);
   println!("yess!@!! {}", magic_number);
 }
