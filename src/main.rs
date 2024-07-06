@@ -122,6 +122,7 @@ fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: 
 
   loop {
     let magic_candidate = random::<u64>() & random::<u64>() & random::<u64>(); // AND 3 different random numbers to reduce the active bits. this is done to hopefully find a smaller candidate
+    println!("{}",  magic_candidate);
     if count_bits(attack_mask.wrapping_mul(magic_candidate) & 0xFF00000000000000) < 6 { // if the number of bits set to 1 are greater than 6, the candidate is too large
       continue;
     }
@@ -156,5 +157,5 @@ fn main() {
   let rook = (true, false);
   let mask = generate_sliding_piece_mask(&square, rook.0, rook.1); // d4 rook
   let magic_number = find_magic_number(square, mask, rook.0, rook.1);
-  println!("{}", magic_number);
+  println!("yess!@!! {}", magic_number);
 }
