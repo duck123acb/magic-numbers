@@ -131,7 +131,8 @@ fn find_magic_number(square: i32, attack_mask: u64, orthagonal: bool, diagonal: 
     let mut fail = false;
 
     for occupancy in &occupancies {
-      let attack_index = ((occupancy * magic_candidate) >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
+      let x = occupancy.wrapping_mul(magic_candidate);
+      let attack_index = (x >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
       let attacks_bitboard = find_legal_moves(&square, occupancy, orthagonal, diagonal);
 
       // check for collisions in the hashmap
