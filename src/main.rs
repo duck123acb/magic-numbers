@@ -1,8 +1,10 @@
 use std::collections::HashMap;
-
 use rand::random;
 use rand::Rng;
 use rand::thread_rng;
+use std::fs::File;
+use std::io::Write;
+use std::io::Error;
 
 fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
   let mut bitboards = Vec::new();
@@ -160,20 +162,34 @@ fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> (u64, u64
   }
 }
 
-fn main() {
-  let mut squares = Vec::new();
-  let mut masks = Vec::new();
-  let mut magics = Vec::new();
-  let mut relevant_bits = Vec::new();
-  let mut attacks = Vec::new();
+fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
+  let mut file = File::create(file_path)?;
+  file.write_all(content.as_bytes())?;
+  Ok(())
+}
 
-  for square in 0..63 {
-    let rook = (true, false);
-    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
-    squares.push(square);
-    masks.push(mask);
-    magics.push(magic_number);
-    relevant_bits.push(bits);
-    attacks.push(piece_attacks);
+fn main() {
+  let file_path = "resources/rook_magics.txt";
+  let content = "Hello, world!\nThis is written to a file.";
+
+  match write_to_file(file_path, content) {
+    Ok(_) => println!("Successfully wrote to {}", file_path),
+    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
   }
+  // let mut squares = Vec::new();
+  // let mut masks = Vec::new();
+  // let mut magics = Vec::new();
+  // let mut relevant_bits = Vec::new();
+  // let mut attacks = Vec::new();
+
+  // for square in 0..63 {
+  //   let rook = (true, false);
+  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
+
+  //   squares.push(square);
+  //   masks.push(mask);
+  //   magics.push(magic_number);
+  //   relevant_bits.push(bits);
+  //   attacks.push(piece_attacks);
+  // }
 }
