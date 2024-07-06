@@ -4,6 +4,15 @@ use rand::random;
 use rand::Rng;
 use rand::thread_rng;
 
+fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
+  let mut bitboards = Vec::new();
+
+  for (_, &bitboard) in hashmap.iter() {
+      bitboards.push(bitboard);
+  }
+
+  bitboards
+}
 fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
@@ -113,7 +122,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> u64 {
+fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> (u64, u64, u32, Vec<u64>) {
   let attack_mask = generate_sliding_piece_mask(&square, orthagonal, diagonal);
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(attack_mask);
@@ -146,14 +155,25 @@ fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> u64 {
     }
 
     if !fail {
-      return magic_candidate;
+      return (attack_mask, magic_candidate, relevant_bits, hashmap_to_bitboard_array(&used_attacks));
     }
   }
 }
 
 fn main() {
-  let square = 28;
-  let rook = (true, false);
-  let magic_number = find_magic_number(square, rook.0, rook.1);
-  println!("yess!@!! {}", magic_number);
+  let mut squares = Vec::new();
+  let mut masks = Vec::new();
+  let mut magics = Vec::new();
+  let mut relevant_bits = Vec::new();
+  let mut attacks = Vec::new();
+
+  for square in 0..63 {
+    let rook = (true, false);
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
+    squares.push(square);
+    masks.push(mask);
+    magics.push(magic_number);
+    relevant_bits.push(bits);
+    attacks.push(piece_attacks);
+  }
 }
