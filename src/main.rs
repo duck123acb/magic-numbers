@@ -182,7 +182,7 @@ fn main() {
     mask_table.insert(square, piece_mask);
   }
 
-  for square in 0..63 {
+  for square in 0..64 {
     let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
 
 
