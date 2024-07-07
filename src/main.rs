@@ -10,7 +10,7 @@ fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
   let mut bitboards = Vec::new();
 
   for (_, &bitboard) in hashmap.iter() {
-      bitboards.push(bitboard);
+    bitboards.push(bitboard);
   }
 
   bitboards
@@ -47,7 +47,6 @@ fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -
       }
   
       moves |= new_square;
-      
     }
   }
 
@@ -124,15 +123,13 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> (u64, u64, u32, Vec<u64>) {
-  let attack_mask = generate_sliding_piece_mask(&square, orthagonal, diagonal);
+fn find_magic_number(square: i32, attack_mask: &u64, orthagonal: bool, diagonal: bool) -> (u64, u64, u32, Vec<u64>) {
   let occupancies = generate_occupancies(&attack_mask);
-  let relevant_bits = count_bits(attack_mask);
+  let relevant_bits = count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
 
   loop {
     let magic_candidate = random::<u64>() & random::<u64>() & random::<u64>(); // AND 3 different random numbers to reduce the active bits. this is done to hopefully find a smaller candidate
-    println!("{}",  magic_candidate); // just to see that the program is actually running
 
     if count_bits(attack_mask.wrapping_mul(magic_candidate) & 0xFF00000000000000) < 6 { // if the number of bits set to 1 are greater than 6, the candidate is too large
       continue;
@@ -157,7 +154,7 @@ fn find_magic_number(square: i32, orthagonal: bool, diagonal: bool) -> (u64, u64
     }
 
     if !fail {
-      return (attack_mask, magic_candidate, relevant_bits, hashmap_to_bitboard_array(&used_attacks));
+      return (*attack_mask, magic_candidate, relevant_bits, hashmap_to_bitboard_array(&used_attacks));
     }
   }
 }
@@ -176,27 +173,46 @@ fn main() {
   let mut magics = "Magics: [".to_string();
   let mut relevant_bits = "Relevant Bits: [".to_string();
   let mut attacks = "Attacks: [".to_string();
+  
+  let rook = (true, false);
 
+  let mut mask_table = HashMap::new();
   for square in 0..63 {
-    let rook = (true, false);
-    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, rook.0, rook.1);
-
-    squares + ", " + &square.to_string();
-    masks + ", " + &mask.to_string();
-    magics + ", " + &magic_number.to_string();
-    relevant_bits + ", " + &bits.to_string();
-    attacks + ", [";
-    for attack in piece_attacks {
-      attacks + ", " + &attack.to_string();
-    }
-    attacks + "]";
+    let piece_mask = generate_sliding_piece_mask(&square, rook.0, rook.1);
+    mask_table.insert(square, piece_mask);
   }
 
-  let mut squares = "]".to_string();
-  let mut masks = "]".to_string();
-  let mut magics = "]".to_string();
-  let mut relevant_bits = "]".to_string();
-  let mut attacks = "]".to_string();
+  for square in 0..63 {
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
+
+
+    squares.push_str(&square.to_string());
+    squares.push_str(", ");
+
+    masks.push_str(&mask.to_string());
+    masks.push_str(", ");
+
+    magics.push_str(&magic_number.to_string());
+    magics.push_str(", ");
+
+    relevant_bits.push_str(&bits.to_string());
+    relevant_bits.push_str(", ");
+
+    attacks.push_str("[");
+    for attack in piece_attacks {
+      attacks.push_str(&attack.to_string());
+      attacks.push_str(", ");
+    }
+    attacks.push_str("], ");
+
+    println!("{}", square);
+  }
+
+  squares.push_str("]");
+  masks.push_str("]");
+  magics.push_str("]");
+  relevant_bits.push_str("]");
+  attacks.push_str("]");
 
   let content = squares + "\n" + &masks + "\n" + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
 
