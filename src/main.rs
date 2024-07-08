@@ -187,8 +187,8 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 fn main() {
   let file_path = "resources/rook_magics.txt";
 
-  let mut masks = "Masks: [".to_string();
   let mut magics = "Magics: [".to_string();
+  let mut masks = "Masks: [".to_string();
   let mut relevant_bits = "Relevant Bits: [".to_string();
   let mut attacks = "Attacks: [".to_string();
   
@@ -201,11 +201,12 @@ fn main() {
   for square in 0..64 {
     let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square]);
 
-    masks.push_str(&mask.to_string());
-    masks.push_str(", ");
 
     magics.push_str(&magic_number.to_string());
     magics.push_str(", ");
+
+    masks.push_str(&mask.to_string());
+    masks.push_str(", ");
 
     relevant_bits.push_str(&bits.to_string());
     relevant_bits.push_str(", ");
@@ -220,12 +221,12 @@ fn main() {
     println!("{}", square);
   }
 
-  masks.push_str("]");
   magics.push_str("]");
+  masks.push_str("]");
   relevant_bits.push_str("]");
   attacks.push_str("]");
 
-  let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
+  let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
 
   match write_to_file(file_path, content.as_str()) {
     Ok(_) => println!("Successfully wrote to {}", file_path),
