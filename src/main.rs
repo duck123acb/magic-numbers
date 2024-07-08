@@ -6,11 +6,11 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Error;
 
-fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
-  let mut bitboards = Vec::new();
+fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 4096] {
+  let mut bitboards = [0; 4096];
 
-  for &bitboard in hashmap.values() {
-    bitboards.push(bitboard);
+  for &key in hashmap.keys() {
+    bitboards[key] = hashmap[&key];
   }
 
   bitboards
@@ -86,7 +86,9 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
       } else {
         piece_bitboard >> shift * (direction * -1)
       };
-  
+    
+      moves |= new_square;
+
       if new_square & 0x8080808080808080 != 0 && direction == 1 { // if we are on the left side of the board and direction is going left, break
         break;
       }
@@ -99,8 +101,6 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
       if new_square & 0x00000000000000FF != 0 && direction == -8 { // if we are on the bottom of the board and direction is going down, break
         break;
       }
-
-      moves |= new_square;
 
       if new_square & occupation != 0 {
         break;
@@ -142,7 +142,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, Vec<u64>) {
+fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, [u64; 4096]) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
@@ -165,7 +165,7 @@ fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, Vec<u64>
       if let Some(existing_attack) = used_attacks.get(&attack_index) { // if there is an attack at this index
         if *existing_attack != attacks_bitboard { // if the attack_bitboard is different from the position in the hashmap
           fail = true;
-          break;
+          continue;
         }
       } else {
         used_attacks.insert(attack_index, attacks_bitboard);
@@ -173,7 +173,7 @@ fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, Vec<u64>
     }
 
     if !fail {
-      return (*attack_mask, magic_candidate, relevant_bits, hashmap_to_bitboard_array(&used_attacks));
+      return (*attack_mask, magic_candidate, 64 - relevant_bits, hashmap_to_bitboard_array(&used_attacks));
     }
   }
 }
