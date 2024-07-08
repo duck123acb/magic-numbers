@@ -15,7 +15,7 @@ fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
 
   bitboards
 }
-fn generate_rook_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
+fn generate_rook_mask(square: &i32) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
@@ -61,22 +61,22 @@ fn generate_rook_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
 
   moves
 }
-fn find_legal_moves(square: &i32, occupation: &u64, orthagonal: bool, diagonal: bool) -> u64 {
+fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  if orthagonal {
-    directions.push(8); // up
-    directions.push(-8); // down
+  if piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(1); // left
+  }
+  if piece_bitboard & 0x0101010101010101 == 0 {
     directions.push(-1); // right
   }
-  if diagonal {
-    directions.push(9); // up left
-    directions.push(7); // up right
-    directions.push(-9); // down right
-    directions.push(-7); // down left
+  if piece_bitboard & 0xFF00000000000000 == 0 {
+    directions.push(8); // up
+  }
+  if piece_bitboard & 0x00000000000000FF == 0 {
+    directions.push(-8); // down
   }
 
   for direction in directions {
@@ -87,12 +87,22 @@ fn find_legal_moves(square: &i32, occupation: &u64, orthagonal: bool, diagonal: 
         piece_bitboard >> shift * (direction * -1)
       };
   
+      if new_square & 0x8080808080808080 != 0 && direction == 1 { // if we are on the left side of the board and direction is going left, break
+        break;
+      }
+      if new_square & 0x0101010101010101 != 0 && direction == -1 { // if we are on the right side of the board and direction is going right, break
+        break;
+      }
+      if new_square & 0xFF00000000000000 != 0 && direction == 8 { // if we are on the top of the board and direction is going up, break
+        break;
+      }
+      if new_square & 0x00000000000000FF != 0 && direction == -8 { // if we are on the bottom of the board and direction is going down, break
+        break;
+      }
+
       moves |= new_square;
 
       if new_square & occupation != 0 {
-        break;
-      }
-      if new_square & (0xFF00000000000000 & 0x00000000000000FF & 0x8080808080808080 & 0x0101010101010101) != 0 { // second top rank
         break;
       }
     }
@@ -132,7 +142,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64, orthagonal: bool, diagonal: bool) -> (u64, u64, u32, Vec<u64>) {
+fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, Vec<u64>) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
@@ -149,7 +159,7 @@ fn find_magic_number(square: i32, attack_mask: &u64, orthagonal: bool, diagonal:
 
     for occupancy in &occupancies {
       let attack_index = (occupancy.wrapping_mul(magic_candidate) >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
-      let attacks_bitboard = find_legal_moves(&square, occupancy, orthagonal, diagonal);
+      let attacks_bitboard = find_legal_rook_moves(&square, occupancy);
 
       // check for collisions in the hashmap
       if let Some(existing_attack) = used_attacks.get(&attack_index) { // if there is an attack at this index
@@ -182,45 +192,43 @@ fn main() {
   let mut relevant_bits = "Relevant Bits: [".to_string();
   let mut attacks = "Attacks: [".to_string();
   
-  let rook = (true, false);
-
   let mut mask_table = HashMap::new();
   for square in 0..64 {
-    let piece_mask = generate_rook_mask(&square, rook.0, rook.1);
+    let piece_mask = generate_rook_mask(&square);
     mask_table.insert(square, piece_mask);
   }
 
-  // for square in 63..64 {
-  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
+  for square in 0..64 {
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square]);
 
-  //   masks.push_str(&mask.to_string());
-  //   masks.push_str(", ");
+    masks.push_str(&mask.to_string());
+    masks.push_str(", ");
 
-  //   magics.push_str(&magic_number.to_string());
-  //   magics.push_str(", ");
+    magics.push_str(&magic_number.to_string());
+    magics.push_str(", ");
 
-  //   relevant_bits.push_str(&bits.to_string());
-  //   relevant_bits.push_str(", ");
+    relevant_bits.push_str(&bits.to_string());
+    relevant_bits.push_str(", ");
 
-  //   attacks.push_str("[");
-  //   for attack in piece_attacks {
-  //     attacks.push_str(&attack.to_string());
-  //     attacks.push_str(", ");
-  //   }
-  //   attacks.push_str("], ");
+    attacks.push_str("[");
+    for attack in piece_attacks {
+      attacks.push_str(&attack.to_string());
+      attacks.push_str(", ");
+    }
+    attacks.push_str("], ");
 
-  //   println!("{}", square);
-  // }
+    println!("{}", square);
+  }
 
-  // masks.push_str("]");
-  // magics.push_str("]");
-  // relevant_bits.push_str("]");
-  // attacks.push_str("]");
+  masks.push_str("]");
+  magics.push_str("]");
+  relevant_bits.push_str("]");
+  attacks.push_str("]");
 
-  // let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
+  let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
 
-  // match write_to_file(file_path, content.as_str()) {
-  //   Ok(_) => println!("Successfully wrote to {}", file_path),
-  //   Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
-  // }
+  match write_to_file(file_path, content.as_str()) {
+    Ok(_) => println!("Successfully wrote to {}", file_path),
+    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  }
 }
