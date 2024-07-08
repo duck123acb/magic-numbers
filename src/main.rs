@@ -9,7 +9,7 @@ use std::io::Error;
 fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
   let mut bitboards = Vec::new();
 
-  for (_, &bitboard) in hashmap.iter() {
+  for &bitboard in hashmap.values() {
     bitboards.push(bitboard);
   }
 
@@ -42,10 +42,23 @@ fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -
       };
 
       // we only need to go to the second-whatever file because we are treating like everyting is a capture, so we can just add that move later in the move gen function
-      if new_square & (0xFF00000000000000 & 0x00000000000000FF & 0x8080808080808080 & 0x0101010101010101) != 0 { // second top rank
+      // if new_square & (0xFF00000000000000 & 0x00000000000000FF & 0x8080808080808080 & 0x0101010101010101) != 0 { // second top rank
+      //   break;
+      // }
+
+      if new_square & 0x8080808080808080 != 0 && direction / direction == 1 { // if we are on the left side of the board and direction is going left, break
         break;
       }
-  
+      if new_square & 0x0101010101010101 != 0 && direction / direction == -1 { // if we are on the right side of the board and direction is going right, break
+        break;
+      }
+      if new_square & 0xFF00000000000000 != 0 && direction / direction == 1 { // if we are on the top of the board and direction is going up, break
+        break;
+      }
+      if new_square & 0x00000000000000FF != 0 && direction / direction == -1 { // if we are on the bottom of the board and direction is going down, break
+        break;
+      }
+
       moves |= new_square;
     }
   }
@@ -168,7 +181,6 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 fn main() {
   let file_path = "resources/rook_magics.txt";
 
-  let mut squares = "Squares: [".to_string();
   let mut masks = "Masks: [".to_string();
   let mut magics = "Magics: [".to_string();
   let mut relevant_bits = "Relevant Bits: [".to_string();
@@ -177,17 +189,13 @@ fn main() {
   let rook = (true, false);
 
   let mut mask_table = HashMap::new();
-  for square in 0..63 {
+  for square in 0..64 {
     let piece_mask = generate_sliding_piece_mask(&square, rook.0, rook.1);
     mask_table.insert(square, piece_mask);
   }
 
-  for square in 0..64 {
+  for square in 63..64 {
     let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
-
-
-    squares.push_str(&square.to_string());
-    squares.push_str(", ");
 
     masks.push_str(&mask.to_string());
     masks.push_str(", ");
@@ -208,13 +216,12 @@ fn main() {
     println!("{}", square);
   }
 
-  squares.push_str("]");
   masks.push_str("]");
   magics.push_str("]");
   relevant_bits.push_str("]");
   attacks.push_str("]");
 
-  let content = squares + "\n" + &masks + "\n" + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
+  let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
 
   match write_to_file(file_path, content.as_str()) {
     Ok(_) => println!("Successfully wrote to {}", file_path),
