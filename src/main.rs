@@ -20,10 +20,18 @@ fn generate_rook_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  directions.push(8); // up
-  directions.push(-8); // down
-  directions.push(1); // left
-  directions.push(-1); // right
+  if piece_bitboard & 0x8080808080808080 == 0 {
+    directions.push(1); // left
+  }
+  if piece_bitboard & 0x0101010101010101 == 0 {
+    directions.push(-1); // right
+  }
+  if piece_bitboard & 0xFF00000000000000 == 0 {
+    directions.push(8); // up
+  }
+  if piece_bitboard & 0x00000000000000FF == 0 {
+    directions.push(-8); // down
+  }
   
 
   for direction in directions {
@@ -179,7 +187,6 @@ fn main() {
   let mut mask_table = HashMap::new();
   for square in 0..64 {
     let piece_mask = generate_rook_mask(&square, rook.0, rook.1);
-    println!("{}, {:b}", count_bits(piece_mask), piece_mask);
     mask_table.insert(square, piece_mask);
   }
 
