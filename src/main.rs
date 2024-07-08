@@ -15,23 +15,16 @@ fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> Vec<u64> {
 
   bitboards
 }
-fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
+fn generate_rook_mask(square: &i32, orthagonal: bool, diagonal: bool) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  if orthagonal {
-    directions.push(8); // up
-    directions.push(-8); // down
-    directions.push(1); // left
-    directions.push(-1); // right
-  }
-  if diagonal {
-    directions.push(9); // up left
-    directions.push(7); // up right
-    directions.push(-9); // down right
-    directions.push(-7); // down left
-  }
+  directions.push(8); // up
+  directions.push(-8); // down
+  directions.push(1); // left
+  directions.push(-1); // right
+  
 
   for direction in directions {
     for shift in 1..7 {
@@ -41,21 +34,16 @@ fn generate_sliding_piece_mask(square: &i32, orthagonal: bool, diagonal: bool) -
         piece_bitboard >> shift * (direction * -1)
       };
 
-      // we only need to go to the second-whatever file because we are treating like everyting is a capture, so we can just add that move later in the move gen function
-      // if new_square & (0xFF00000000000000 & 0x00000000000000FF & 0x8080808080808080 & 0x0101010101010101) != 0 { // second top rank
-      //   break;
-      // }
-
-      if new_square & 0x8080808080808080 != 0 && direction / direction == 1 { // if we are on the left side of the board and direction is going left, break
+      if new_square & 0x8080808080808080 != 0 && direction == 1 { // if we are on the left side of the board and direction is going left, break
         break;
       }
-      if new_square & 0x0101010101010101 != 0 && direction / direction == -1 { // if we are on the right side of the board and direction is going right, break
+      if new_square & 0x0101010101010101 != 0 && direction == -1 { // if we are on the right side of the board and direction is going right, break
         break;
       }
-      if new_square & 0xFF00000000000000 != 0 && direction / direction == 1 { // if we are on the top of the board and direction is going up, break
+      if new_square & 0xFF00000000000000 != 0 && direction == 8 { // if we are on the top of the board and direction is going up, break
         break;
       }
-      if new_square & 0x00000000000000FF != 0 && direction / direction == -1 { // if we are on the bottom of the board and direction is going down, break
+      if new_square & 0x00000000000000FF != 0 && direction == -8 { // if we are on the bottom of the board and direction is going down, break
         break;
       }
 
@@ -190,41 +178,42 @@ fn main() {
 
   let mut mask_table = HashMap::new();
   for square in 0..64 {
-    let piece_mask = generate_sliding_piece_mask(&square, rook.0, rook.1);
+    let piece_mask = generate_rook_mask(&square, rook.0, rook.1);
+    println!("{}, {:b}", count_bits(piece_mask), piece_mask);
     mask_table.insert(square, piece_mask);
   }
 
-  for square in 63..64 {
-    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
+  // for square in 63..64 {
+  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], rook.0, rook.1);
 
-    masks.push_str(&mask.to_string());
-    masks.push_str(", ");
+  //   masks.push_str(&mask.to_string());
+  //   masks.push_str(", ");
 
-    magics.push_str(&magic_number.to_string());
-    magics.push_str(", ");
+  //   magics.push_str(&magic_number.to_string());
+  //   magics.push_str(", ");
 
-    relevant_bits.push_str(&bits.to_string());
-    relevant_bits.push_str(", ");
+  //   relevant_bits.push_str(&bits.to_string());
+  //   relevant_bits.push_str(", ");
 
-    attacks.push_str("[");
-    for attack in piece_attacks {
-      attacks.push_str(&attack.to_string());
-      attacks.push_str(", ");
-    }
-    attacks.push_str("], ");
+  //   attacks.push_str("[");
+  //   for attack in piece_attacks {
+  //     attacks.push_str(&attack.to_string());
+  //     attacks.push_str(", ");
+  //   }
+  //   attacks.push_str("], ");
 
-    println!("{}", square);
-  }
+  //   println!("{}", square);
+  // }
 
-  masks.push_str("]");
-  magics.push_str("]");
-  relevant_bits.push_str("]");
-  attacks.push_str("]");
+  // masks.push_str("]");
+  // magics.push_str("]");
+  // relevant_bits.push_str("]");
+  // attacks.push_str("]");
 
-  let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
+  // let content = masks + "\n" + &magics + "\n" + &relevant_bits + "\n" + &attacks;
 
-  match write_to_file(file_path, content.as_str()) {
-    Ok(_) => println!("Successfully wrote to {}", file_path),
-    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
-  }
+  // match write_to_file(file_path, content.as_str()) {
+  //   Ok(_) => println!("Successfully wrote to {}", file_path),
+  //   Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  // }
 }
