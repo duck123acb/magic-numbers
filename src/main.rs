@@ -282,7 +282,7 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 }
 
 fn main() {  
-  let file_path = "resources/bishop_magics.txt";
+  let file_path = "resources/rook_magics.txt";
 
   let mut magics = "Magics: [".to_string();
   let mut masks = "Masks: [".to_string();
@@ -290,7 +290,7 @@ fn main() {
   let mut attacks = "Attacks: [".to_string();
   
 
-  let bishop = true;
+  let bishop = false;
 
   let mut mask_table = HashMap::new();
   for square in 0..64 {
@@ -299,38 +299,38 @@ fn main() {
     mask_table.insert(square, piece_mask);
   }
 
-  // for square in 0..64 {
-  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], bishop);
+  for square in 0..64 {
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], bishop);
 
 
-  //   magics.push_str(&magic_number.to_string());
-  //   magics.push_str(", ");
+    magics.push_str(&magic_number.to_string());
+    magics.push_str(", ");
 
-  //   masks.push_str(&mask.to_string());
-  //   masks.push_str(", ");
+    masks.push_str(&mask.to_string());
+    masks.push_str(", ");
 
-  //   relevant_bits.push_str(&bits.to_string());
-  //   relevant_bits.push_str(", ");
+    relevant_bits.push_str(&bits.to_string());
+    relevant_bits.push_str(", ");
 
-  //   attacks.push_str("[");
-  //   for attack in piece_attacks {
-  //     attacks.push_str(&attack.to_string());
-  //     attacks.push_str(", ");
-  //   }
-  //   attacks.push_str("], ");
+    attacks.push_str("[");
+    for attack in piece_attacks {
+      attacks.push_str(&attack.to_string());
+      attacks.push_str(", ");
+    }
+    attacks.push_str("], ");
 
-  //   println!("{}", square);
-  // }
+    println!("{}", square);
+  }
 
-  // magics.push_str("]");
-  // masks.push_str("]");
-  // relevant_bits.push_str("]");
-  // attacks.push_str("]");
+  magics.push_str("]");
+  masks.push_str("]");
+  relevant_bits.push_str("]");
+  attacks.push_str("]");
 
-  // let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
+  let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
 
-  // match write_to_file(file_path, content.as_str()) {
-  //   Ok(_) => println!("Successfully wrote to {}", file_path),
-  //   Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
-  // }
+  match write_to_file(file_path, content.as_str()) {
+    Ok(_) => println!("Successfully wrote to {}", file_path),
+    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  }
 }
