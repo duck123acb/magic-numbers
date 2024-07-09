@@ -67,11 +67,6 @@ fn generate_bishop_mask(square: &i32) -> u64 {
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  directions.push(-9);
-  directions.push(-7);
-  directions.push(7);
-  directions.push(9);
-
   if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(9); // up left
   }
@@ -158,16 +153,16 @@ fn find_legal_bishop_moves(square: &i32, occupation: &u64) -> u64 {
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  if piece_bitboard & 0x100000000000000 == 0 {
-    directions.push(7); // up right
-  }
-  if piece_bitboard & 0x8000000000000000 == 0 {
+  if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(9); // up left
   }
-  if piece_bitboard & 0x80 == 0 {
+  if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x0101010101010101 == 0 {
+    directions.push(7); // up right
+  }
+  if piece_bitboard & 0x00000000000000FF == 0 && piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(-7); // down left
   }
-  if piece_bitboard & 0x1 == 0 {
+  if piece_bitboard & 0x00000000000000FF == 0 && piece_bitboard & 0x0101010101010101 == 0 {
     directions.push(-9); // down right
   }
 
@@ -178,23 +173,13 @@ fn find_legal_bishop_moves(square: &i32, occupation: &u64) -> u64 {
       } else {
         piece_bitboard >> shift * (direction * -1)
       };
-    
+
       moves |= new_square;
 
-      if new_square & 0x100000000000000 != 0 && direction == 7 {
-        break;
-      }
-      if new_square & 0x8000000000000000 != 0 && direction == 9 {
-        break;
-      }
-      if new_square & 0x80 != 0 && direction == -7 {
-        break;
-      }
-      if new_square & 0x1 != 0 && direction == -9 {
-        break;
-      }
-
       if new_square & occupation != 0 {
+        break;
+      }
+      if new_square & 0xFF818181818181FF != 0 {
         break;
       }
     }
