@@ -6,8 +6,8 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Error;
 
-fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 4096] {
-  let mut bitboards = [0; 4096];
+fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 512] {
+  let mut bitboards = [0; 512];
 
   for &key in hashmap.keys() {
     bitboards[key] = hashmap[&key];
@@ -93,7 +93,7 @@ fn generate_bishop_mask(square: &i32) -> u64 {
         piece_bitboard >> shift * (direction * -1)
       };
 
-      if new_square & (0xFF000000000000FF | 0x8181818181818181) != 0 {
+      if new_square & 0xFF818181818181FF != 0 {
         break;
       }
 
@@ -234,7 +234,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 4096]) {
+fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 512]) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
@@ -289,43 +289,41 @@ fn main() {
   let mut mask_table = HashMap::new();
   for square in 0..64 {
     let piece_mask = if bishop { generate_bishop_mask(&square) } else { generate_rook_mask(&square) };
-    // println!("{}, {:b}", count_bits(piece_mask), piece_mask);
-    println!("{}", 64 - count_bits(piece_mask));
     mask_table.insert(square, piece_mask);
   }
 
-  // for square in 0..64 {
-  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], bishop);
+  for square in 0..64 {
+    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], bishop);
 
 
-  //   magics.push_str(&magic_number.to_string());
-  //   magics.push_str(", ");
+    magics.push_str(&magic_number.to_string());
+    magics.push_str(", ");
 
-  //   masks.push_str(&mask.to_string());
-  //   masks.push_str(", ");
+    masks.push_str(&mask.to_string());
+    masks.push_str(", ");
 
-  //   relevant_bits.push_str(&bits.to_string());
-  //   relevant_bits.push_str(", ");
+    relevant_bits.push_str(&bits.to_string());
+    relevant_bits.push_str(", ");
 
-  //   attacks.push_str("[");
-  //   for attack in piece_attacks {
-  //     attacks.push_str(&attack.to_string());
-  //     attacks.push_str(", ");
-  //   }
-  //   attacks.push_str("], ");
+    attacks.push_str("[");
+    for attack in piece_attacks {
+      attacks.push_str(&attack.to_string());
+      attacks.push_str(", ");
+    }
+    attacks.push_str("], ");
 
-  //   println!("{}", square);
-  // }
+    println!("{}", square);
+  }
 
-  // magics.push_str("]");
-  // masks.push_str("]");
-  // relevant_bits.push_str("]");
-  // attacks.push_str("]");
+  magics.push_str("]");
+  masks.push_str("]");
+  relevant_bits.push_str("]");
+  attacks.push_str("]");
 
-  // let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
+  let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
 
-  // match write_to_file(file_path, content.as_str()) {
-  //   Ok(_) => println!("Successfully wrote to {}", file_path),
-  //   Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
-  // }
+  match write_to_file(file_path, content.as_str()) {
+    Ok(_) => println!("Successfully wrote to {}", file_path),
+    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  }
 }
