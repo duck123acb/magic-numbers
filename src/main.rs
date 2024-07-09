@@ -15,6 +15,7 @@ fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 4096] {
 
   bitboards
 }
+
 fn generate_rook_mask(square: &i32) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
