@@ -42,10 +42,10 @@ fn generate_rook_mask(square: &i32) -> u64 {
         piece_bitboard >> shift * (direction * -1)
       };
 
-      if new_square & 0x8080808080808080 != 0 && direction == 1 { break
+      if new_square & 0x8080808080808080 != 0 && direction == 1 {
         break;
       }
-      if new_square & 0x0101010101010101 != 0 && direction == -1 { break
+      if new_square & 0x0101010101010101 != 0 && direction == -1 {
         break;
       }
       if new_square & 0xFF00000000000000 != 0 && direction == 8 {
@@ -61,21 +61,21 @@ fn generate_rook_mask(square: &i32) -> u64 {
 
   moves
 }
-fn generate_bishop_mask(square: &i32) {
+fn generate_bishop_mask(square: &i32) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
 
-  if piece_bitboard & 0x80 == 0 {
+  if piece_bitboard & 0x100000000000000 == 0 {
     directions.push(7); // up right
   }
-  if piece_bitboard & 0x1 == 0 {
+  if piece_bitboard & 0x8000000000000000 == 0 {
     directions.push(9); // up left
   }
-  if piece_bitboard & 0x100000000000000 == 0 {
+  if piece_bitboard & 0x80 == 0 {
     directions.push(-7); // down left
   }
-  if piece_bitboard & 0x8000000000000000 == 0 {
+  if piece_bitboard & 0x1 == 0 {
     directions.push(-9); // down right
   }
   
@@ -88,16 +88,16 @@ fn generate_bishop_mask(square: &i32) {
         piece_bitboard >> shift * (direction * -1)
       };
 
-      if new_square & 0x80 != 0 && direction == 7 {
+      if new_square & 0x100000000000000 != 0 && direction == 7 {
         break;
       }
-      if new_square & 0x1 != 0 && direction == 9 {
+      if new_square & 0x8000000000000000 != 0 && direction == 9 {
         break;
       }
-      if new_square & 0x100000000000000 != 0 && direction == -7 {
+      if new_square & 0x80 != 0 && direction == -7 {
         break;
       }
-      if new_square & 0x8000000000000000 != 0 && direction == -9 {
+      if new_square & 0x1 != 0 && direction == -9 {
         break;
       }
 
@@ -136,16 +136,65 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
     
       moves |= new_square;
 
-      if new_square & 0x8080808080808080 != 0 && direction == 1 { break
+      if new_square & 0x8080808080808080 != 0 && direction == 1 {
         break;
       }
-      if new_square & 0x0101010101010101 != 0 && direction == -1 { break
+      if new_square & 0x0101010101010101 != 0 && direction == -1 {
         break;
       }
       if new_square & 0xFF00000000000000 != 0 && direction == 8 {
         break;
       }
       if new_square & 0x00000000000000FF != 0 && direction == -8 {
+        break;
+      }
+
+      if new_square & occupation != 0 {
+        break;
+      }
+    }
+  }
+
+  moves
+}
+fn find_legal_bishop_moves(square: &i32, occupation: &u64) -> u64 {
+  let piece_bitboard = 1 << square;
+  let mut moves = 0;
+  let mut directions = Vec::new();
+
+  if piece_bitboard & 0x100000000000000 == 0 {
+    directions.push(7); // up right
+  }
+  if piece_bitboard & 0x8000000000000000 == 0 {
+    directions.push(9); // up left
+  }
+  if piece_bitboard & 0x80 == 0 {
+    directions.push(-7); // down left
+  }
+  if piece_bitboard & 0x1 == 0 {
+    directions.push(-9); // down right
+  }
+
+  for direction in directions {
+    for shift in 1..7 {
+      let new_square = if direction > 0 { 
+        piece_bitboard << shift * direction
+      } else {
+        piece_bitboard >> shift * (direction * -1)
+      };
+    
+      moves |= new_square;
+
+      if new_square & 0x100000000000000 != 0 && direction == 7 {
+        break;
+      }
+      if new_square & 0x8000000000000000 != 0 && direction == 9 {
+        break;
+      }
+      if new_square & 0x80 != 0 && direction == -7 {
+        break;
+      }
+      if new_square & 0x1 != 0 && direction == -9 {
         break;
       }
 
@@ -189,7 +238,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, [u64; 4096]) {
+fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 4096]) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
@@ -206,7 +255,7 @@ fn find_magic_number(square: i32, attack_mask: &u64) -> (u64, u64, u32, [u64; 40
 
     for occupancy in &occupancies {
       let attack_index = (occupancy.wrapping_mul(magic_candidate) >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
-      let attacks_bitboard = find_legal_rook_moves(&square, occupancy);
+      let attacks_bitboard = if is_bishop { find_legal_bishop_moves(&square, occupancy) } else { find_legal_rook_moves(&square, occupancy) };
 
       // check for collisions in the hashmap
       if let Some(existing_attack) = used_attacks.get(&attack_index) { // if there is an attack at this index
@@ -231,52 +280,56 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
   Ok(())
 }
 
-fn main() {
-  let file_path = "resources/rook_magics.txt";
+fn main() {  
+  let file_path = "resources/bishop_magics.txt";
 
   let mut magics = "Magics: [".to_string();
   let mut masks = "Masks: [".to_string();
   let mut relevant_bits = "Relevant Bits: [".to_string();
   let mut attacks = "Attacks: [".to_string();
   
+
+  let bishop = true;
+
   let mut mask_table = HashMap::new();
   for square in 0..64 {
-    let piece_mask = generate_rook_mask(&square);
+    let piece_mask = if bishop { generate_bishop_mask(&square) } else { generate_rook_mask(&square) };
+    println!("{}", 64 - count_bits(piece_mask));
     mask_table.insert(square, piece_mask);
   }
 
-  for square in 0..64 {
-    let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square]);
+  // for square in 0..64 {
+  //   let (mask, magic_number, bits, piece_attacks) = find_magic_number(square, &mask_table[&square], bishop);
 
 
-    magics.push_str(&magic_number.to_string());
-    magics.push_str(", ");
+  //   magics.push_str(&magic_number.to_string());
+  //   magics.push_str(", ");
 
-    masks.push_str(&mask.to_string());
-    masks.push_str(", ");
+  //   masks.push_str(&mask.to_string());
+  //   masks.push_str(", ");
 
-    relevant_bits.push_str(&bits.to_string());
-    relevant_bits.push_str(", ");
+  //   relevant_bits.push_str(&bits.to_string());
+  //   relevant_bits.push_str(", ");
 
-    attacks.push_str("[");
-    for attack in piece_attacks {
-      attacks.push_str(&attack.to_string());
-      attacks.push_str(", ");
-    }
-    attacks.push_str("], ");
+  //   attacks.push_str("[");
+  //   for attack in piece_attacks {
+  //     attacks.push_str(&attack.to_string());
+  //     attacks.push_str(", ");
+  //   }
+  //   attacks.push_str("], ");
 
-    println!("{}", square);
-  }
+  //   println!("{}", square);
+  // }
 
-  magics.push_str("]");
-  masks.push_str("]");
-  relevant_bits.push_str("]");
-  attacks.push_str("]");
+  // magics.push_str("]");
+  // masks.push_str("]");
+  // relevant_bits.push_str("]");
+  // attacks.push_str("]");
 
-  let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
+  // let content = magics + "\n" + &masks + "\n" + &relevant_bits + "\n" + &attacks;
 
-  match write_to_file(file_path, content.as_str()) {
-    Ok(_) => println!("Successfully wrote to {}", file_path),
-    Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
-  }
+  // match write_to_file(file_path, content.as_str()) {
+  //   Ok(_) => println!("Successfully wrote to {}", file_path),
+  //   Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  // }
 }
