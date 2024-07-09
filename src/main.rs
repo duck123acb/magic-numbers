@@ -42,16 +42,16 @@ fn generate_rook_mask(square: &i32) -> u64 {
         piece_bitboard >> shift * (direction * -1)
       };
 
-      if new_square & 0x8080808080808080 != 0 && direction == 1 { // if we are on the left side of the board and direction is going left, break
+      if new_square & 0x8080808080808080 != 0 && direction == 1 { break
         break;
       }
-      if new_square & 0x0101010101010101 != 0 && direction == -1 { // if we are on the right side of the board and direction is going right, break
+      if new_square & 0x0101010101010101 != 0 && direction == -1 { break
         break;
       }
-      if new_square & 0xFF00000000000000 != 0 && direction == 8 { // if we are on the top of the board and direction is going up, break
+      if new_square & 0xFF00000000000000 != 0 && direction == 8 {
         break;
       }
-      if new_square & 0x00000000000000FF != 0 && direction == -8 { // if we are on the bottom of the board and direction is going down, break
+      if new_square & 0x00000000000000FF != 0 && direction == -8 {
         break;
       }
 
@@ -61,6 +61,53 @@ fn generate_rook_mask(square: &i32) -> u64 {
 
   moves
 }
+fn generate_bishop_mask(square: &i32) {
+  let piece_bitboard = 1 << square;
+  let mut moves = 0;
+  let mut directions = Vec::new();
+
+  if piece_bitboard & 0x80 == 0 {
+    directions.push(7); // up right
+  }
+  if piece_bitboard & 0x1 == 0 {
+    directions.push(9); // up left
+  }
+  if piece_bitboard & 0x100000000000000 == 0 {
+    directions.push(-7); // down left
+  }
+  if piece_bitboard & 0x8000000000000000 == 0 {
+    directions.push(-9); // down right
+  }
+  
+
+  for direction in directions {
+    for shift in 1..7 {
+      let new_square = if direction > 0 { 
+        piece_bitboard << shift * direction
+      } else {
+        piece_bitboard >> shift * (direction * -1)
+      };
+
+      if new_square & 0x80 != 0 && direction == 7 {
+        break;
+      }
+      if new_square & 0x1 != 0 && direction == 9 {
+        break;
+      }
+      if new_square & 0x100000000000000 != 0 && direction == -7 {
+        break;
+      }
+      if new_square & 0x8000000000000000 != 0 && direction == -9 {
+        break;
+      }
+
+      moves |= new_square;
+    }
+  }
+
+  moves
+}
+
 fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
@@ -89,16 +136,16 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
     
       moves |= new_square;
 
-      if new_square & 0x8080808080808080 != 0 && direction == 1 { // if we are on the left side of the board and direction is going left, break
+      if new_square & 0x8080808080808080 != 0 && direction == 1 { break
         break;
       }
-      if new_square & 0x0101010101010101 != 0 && direction == -1 { // if we are on the right side of the board and direction is going right, break
+      if new_square & 0x0101010101010101 != 0 && direction == -1 { break
         break;
       }
-      if new_square & 0xFF00000000000000 != 0 && direction == 8 { // if we are on the top of the board and direction is going up, break
+      if new_square & 0xFF00000000000000 != 0 && direction == 8 {
         break;
       }
-      if new_square & 0x00000000000000FF != 0 && direction == -8 { // if we are on the bottom of the board and direction is going down, break
+      if new_square & 0x00000000000000FF != 0 && direction == -8 {
         break;
       }
 
