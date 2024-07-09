@@ -72,13 +72,13 @@ fn generate_bishop_mask(square: &i32) -> u64 {
   directions.push(7);
   directions.push(9);
 
-  if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x8080808080808080 == 0{
+  if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(9); // up left
   }
   if piece_bitboard & 0xFF00000000000000 == 0 && piece_bitboard & 0x0101010101010101 == 0 {
     directions.push(7); // up right
   }
-  if piece_bitboard & 0x00000000000000FF == 0 && piece_bitboard & 0x8080808080808080 == 0{
+  if piece_bitboard & 0x00000000000000FF == 0 && piece_bitboard & 0x8080808080808080 == 0 {
     directions.push(-7); // down left
   }
   if piece_bitboard & 0x00000000000000FF == 0 && piece_bitboard & 0x0101010101010101 == 0 {
@@ -93,7 +93,7 @@ fn generate_bishop_mask(square: &i32) -> u64 {
         piece_bitboard >> shift * (direction * -1)
       };
 
-      if new_square & (0xFF000000000000FF & 0x8181818181818181) != 0 {
+      if new_square & (0xFF000000000000FF | 0x8181818181818181) != 0 {
         break;
       }
 
