@@ -99,7 +99,7 @@ fn generate_bishop_mask(square: &i32) -> u64 {
   moves
 }
 
-fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
+fn find_legal_rook_moves(square: &i32, occupancy: &u64) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
@@ -127,6 +127,9 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
     
       moves |= new_square;
 
+      if new_square & occupancy != 0 {
+        break;
+      }
       if new_square & 0x8080808080808080 != 0 && direction == 1 {
         break;
       }
@@ -139,16 +142,12 @@ fn find_legal_rook_moves(square: &i32, occupation: &u64) -> u64 {
       if new_square & 0x00000000000000FF != 0 && direction == -8 {
         break;
       }
-
-      if new_square & occupation != 0 {
-        break;
-      }
     }
   }
 
   moves
 }
-fn find_legal_bishop_moves(square: &i32, occupation: &u64) -> u64 {
+fn find_legal_bishop_moves(square: &i32, occupancy: &u64) -> u64 {
   let piece_bitboard = 1 << square;
   let mut moves = 0;
   let mut directions = Vec::new();
@@ -176,7 +175,7 @@ fn find_legal_bishop_moves(square: &i32, occupation: &u64) -> u64 {
 
       moves |= new_square;
 
-      if new_square & occupation != 0 {
+      if new_square & occupancy != 0 {
         break;
       }
       if new_square & 0xFF818181818181FF != 0 {
