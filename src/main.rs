@@ -289,8 +289,8 @@ fn main() {
   let mut mask_table = HashMap::new();
   for square in 0..64 {
     let piece_mask = if bishop { generate_bishop_mask(&square) } else { generate_rook_mask(&square) };
-    println!("{}, {:b}", count_bits(piece_mask), piece_mask);
-    // println!("{}", 64 - count_bits(piece_mask));
+    // println!("{}, {:b}", count_bits(piece_mask), piece_mask);
+    println!("{}", 64 - count_bits(piece_mask));
     mask_table.insert(square, piece_mask);
   }
 
