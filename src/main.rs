@@ -6,8 +6,8 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Error;
 
-fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 512] {
-  let mut bitboards = [0; 512];
+fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 4096] {
+  let mut bitboards = [0; 4096];  // 4096 if its a rook, can be brought down to 512 for the bishops
 
   for &key in hashmap.keys() {
     bitboards[key] = hashmap[&key];
@@ -218,9 +218,9 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 512]) {
+fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 4096]) {
   let occupancies = generate_occupancies(&attack_mask);
-  let relevant_bits = count_bits(*attack_mask);
+  let relevant_bits = 64 - count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
 
   loop {
@@ -234,7 +234,7 @@ fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u
     let mut fail = false;
 
     for occupancy in &occupancies {
-      let attack_index = (occupancy.wrapping_mul(magic_candidate) >> (64 - relevant_bits)) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
+      let attack_index = (occupancy.wrapping_mul(magic_candidate) >> relevant_bits) as usize; // this is the hash function for the key to the attack. https://analog-hors.github.io/site/magic-bitboards/
       let attacks_bitboard = if is_bishop { find_legal_bishop_moves(&square, occupancy) } else { find_legal_rook_moves(&square, occupancy) };
 
       // check for collisions in the hashmap
@@ -249,7 +249,7 @@ fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u
     }
 
     if !fail {
-      return (*attack_mask, magic_candidate, 64 - relevant_bits, hashmap_to_bitboard_array(&used_attacks));
+      return (*attack_mask, magic_candidate, relevant_bits, hashmap_to_bitboard_array(&used_attacks));
     }
   }
 }
@@ -261,7 +261,7 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 }
 
 fn main() {
-  let bishop = true;
+  let bishop = false;
 
   let file_path = if bishop { "resources/bishop_magics.txt" } else { "resources/rook_magics.txt" };
 
