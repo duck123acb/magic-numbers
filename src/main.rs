@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use rand::random;
-use rand::Rng;
-use rand::thread_rng;
 use std::fs::File;
 use std::io::Write;
 use std::io::Error;
@@ -223,7 +221,6 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
 fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; ATTACK_ARRAY_SIZE]) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = 64 - count_bits(*attack_mask);
-  let mut rng = thread_rng(); // init the rng
 
   loop {
     let magic_candidate = random::<u64>() & random::<u64>() & random::<u64>(); // AND 3 different random numbers to reduce the active bits. this is done to hopefully find a smaller candidate
