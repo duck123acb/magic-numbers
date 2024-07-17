@@ -6,8 +6,10 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Error;
 
-fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; 4096] {
-  let mut bitboards = [0; 4096];  // 4096 if its a rook, can be brought down to 512 for the bishops
+const ATTACK_ARRAY_SIZE: usize = 4096; // 4096 if its a rook, can be brought down to 512 for the bishops
+
+fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; ATTACK_ARRAY_SIZE] {
+  let mut bitboards = [0; ATTACK_ARRAY_SIZE];
 
   for &key in hashmap.keys() {
     bitboards[key] = hashmap[&key];
@@ -218,7 +220,7 @@ fn generate_occupancies(attack_mask: &u64) -> Vec<u64> {
   occupancies
 }
 
-fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; 4096]) {
+fn find_magic_number(square: i32, attack_mask: &u64, is_bishop: bool) -> (u64, u64, u32, [u64; ATTACK_ARRAY_SIZE]) {
   let occupancies = generate_occupancies(&attack_mask);
   let relevant_bits = 64 - count_bits(*attack_mask);
   let mut rng = thread_rng(); // init the rng
@@ -261,7 +263,7 @@ fn write_to_file(file_path: &str, content: &str) -> Result<(), Error> {
 }
 
 fn main() {
-  let bishop = false;
+  let bishop = ATTACK_ARRAY_SIZE == 512;
 
   let file_path = if bishop { "resources/bishop_magics.txt" } else { "resources/rook_magics.txt" };
 
