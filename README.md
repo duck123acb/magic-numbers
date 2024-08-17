@@ -16,7 +16,7 @@ The output includes magic numbers, masks, relevant bits, and attack tables, whic
 Clone the project
 
 ```bash
-  git clone [https://github.com/duck123acb/magic-numbers.git](https://github.com/duck123acb/magic-numbers.git)
+  git clone https://github.com/duck123acb/magic-numbers.git
 ```
 
 Go to the project directory
