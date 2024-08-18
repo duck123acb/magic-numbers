@@ -39,7 +39,7 @@ fn generate_rook_mask(square: &i32) -> u64 {
   
 
   for direction in directions {
-    for shift in 1..8 {
+    for shift in 1..7 {
       let new_square = if direction > 0 { 
         piece_bitboard << shift * direction
       } else {
@@ -121,7 +121,7 @@ fn find_legal_rook_moves(square: &i32, occupancy: &u64) -> u64 {
   }
 
   for direction in directions {
-    for shift in 1..7 {
+    for shift in 1..8 {
       let new_square = if direction > 0 { 
         piece_bitboard << shift * direction
       } else {
