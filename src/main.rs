@@ -39,7 +39,7 @@ fn generate_rook_mask(square: &i32) -> u64 {
   
 
   for direction in directions {
-    for shift in 1..7 {
+    for shift in 1..8 {
       let new_square = if direction > 0 { 
         piece_bitboard << shift * direction
       } else {
@@ -313,8 +313,9 @@ fn main() {
     Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
   }
 
-  for i in 0..64 {
-    let moves = get_rook_moves(i, &0);
-    println!("{:b}", moves);
-  }
+  // TESTING if you need it i guess
+  // for i in 0..64 {
+  //   let moves = get_rook_moves(i, &0);
+  //   println!("{:b}", moves);
+  // }
 }
