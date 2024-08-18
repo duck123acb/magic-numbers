@@ -4,6 +4,9 @@ use std::fs::File;
 use std::io::Write;
 use std::io::Error;
 
+mod test;
+use test::*;
+
 const ATTACK_ARRAY_SIZE: usize = 4096; // 4096 if its a rook, can be brought down to 512 for the bishops
 
 fn hashmap_to_bitboard_array(hashmap: &HashMap<usize, u64>) -> [u64; ATTACK_ARRAY_SIZE] {
@@ -308,5 +311,10 @@ fn main() {
   match write_to_file(file_path, content.as_str()) {
     Ok(_) => println!("Successfully wrote to {}", file_path),
     Err(e) => eprintln!("Error writing to {}: {}", file_path, e),
+  }
+
+  for i in 0..64 {
+    let moves = get_rook_moves(i, &0);
+    println!("{:b}", moves);
   }
 }
