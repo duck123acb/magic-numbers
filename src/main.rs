@@ -298,7 +298,7 @@ fn main() {
     }
     attacks.push_str("], ");
 
-    println!("{}", square);
+    println!("Square {} done", square);
   }
 
   magics.push_str("]");
