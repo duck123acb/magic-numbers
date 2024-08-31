@@ -1,4 +1,5 @@
 # Magic Bitboard Generator
+![ICON](https://github.com/user-attachments/assets/030f9c6c-0045-4f46-b75d-4055f4bcd2c2)
 Generates magic bitboards for rooks and bishops in a chess engine. <br>
 The output includes magic numbers, masks, relevant bits, and attack tables, which are stored in a file for later use.
 
